@@ -109,7 +109,7 @@ class AutoReadingModeSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Startup in reading mode")
+			.setName("Startup in Reading mode")
 			.setDesc(
 				"View previously opened documents in reading mode when starting Obsidian.",
 			)
