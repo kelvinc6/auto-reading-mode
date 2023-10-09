@@ -11,4 +11,4 @@ The timer runs while Obsidian is active or minimized.
 Go into the plugin settings to configure:
 
 -   **Timeout (minutes)** - Timeout before reading mode is enabled while Obsidian is active or minimized.
--   **Startup in Reading mode** - View previously opened documents in reading mode when starting Obsidian.
+-   **Startup in Reading mode** - View previously opened documents in Reading mode when starting Obsidian.
