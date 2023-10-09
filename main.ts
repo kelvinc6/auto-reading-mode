@@ -1,46 +1,42 @@
-import { App, Plugin, PluginSettingTab, Setting, Workspace, WorkspaceLeaf } from 'obsidian';
+import {
+	App,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	WorkspaceLeaf,
+} from "obsidian";
 
 interface AutoReadingModeSettings {
 	timeout: number;
+	isReadingModeOnStartup: boolean;
 }
 
 const DEFAULT_SETTINGS: AutoReadingModeSettings = {
 	timeout: 5,
-}
+	isReadingModeOnStartup: true,
+};
 
 export default class AutoReadingMode extends Plugin {
 	settings: AutoReadingModeSettings;
 
 	timer: NodeJS.Timeout | null = null;
-	hasStarted: boolean;
-
-	setMarkdownLeavesToPreview() {
-		const markdownLeaves: WorkspaceLeaf[] = this.app.workspace.getLeavesOfType("markdown");
-		markdownLeaves.forEach(workspaceLeaf => {
-			const viewState = workspaceLeaf.getViewState();
-			workspaceLeaf.setViewState({ ...viewState, state: { ...viewState.state, mode: "preview" } })
-		})
-	}
+	hasStarted: boolean = false;
+	fileOpenHandler: any;
 
 	async onload() {
 		await this.loadSettings();
 
-		this.hasStarted = false;
+		this.app.workspace.onLayoutReady(() => {
+			if (this.settings.isReadingModeOnStartup) {
+				this.setMarkdownLeavesToPreviewMode();
+			}
+		});
 
-		this.registerEvent(this.app.workspace.on("file-open", () => {
-			if (this.hasStarted) return;
-			this.setMarkdownLeavesToPreview();
-			this.hasStarted = true;
-		}))
+		this.app.workspace.on(
+			"editor-change",
+			this.onEditorChangeCallback.bind(this),
+		);
 
-		this.registerEvent(this.app.workspace.on("editor-change", () => {
-			if (this.timer != null) clearTimeout(this.timer)
-
-			this.timer = setTimeout(() => {
-				this.setMarkdownLeavesToPreview();
-			}, 60000 * this.settings.timeout)
-
-		}))
 		this.addSettingTab(new AutoReadingModeSettingTab(this.app, this));
 	}
 
@@ -49,11 +45,37 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData(),
+		);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	onEditorChangeCallback() {
+		console.log("Editor change callback");
+		if (this.timer != null) clearTimeout(this.timer);
+
+		this.timer = setTimeout(() => {
+			this.setMarkdownLeavesToPreviewMode();
+		}, 60000 * this.settings.timeout);
+	}
+
+	setMarkdownLeavesToPreviewMode() {
+		console.log("Setting leaves to preview.");
+		const markdownLeaves: WorkspaceLeaf[] =
+			this.app.workspace.getLeavesOfType("markdown");
+		markdownLeaves.forEach((workspaceLeaf) => {
+			const viewState = workspaceLeaf.getViewState();
+			workspaceLeaf.setViewState({
+				...viewState,
+				state: { ...viewState.state, mode: "preview" },
+			});
+		});
 	}
 }
 
@@ -70,23 +92,34 @@ class AutoReadingModeSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Timeout (minutes)')
-			.setDesc('Timeout before reading mode is enabled while Obsidian is active or minimized.')
-			.addText(text => text
-				.setValue(this.plugin.settings.timeout.toString())
-				.onChange(async (value) => {
-					this.plugin.settings.timeout = parseInt(value);
-					await this.plugin.saveSettings();
-				}));
+			.setName("Timeout (minutes)")
+			.setDesc(
+				"Timeout before reading mode is enabled while Obsidian is active or minimized.",
+			)
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.timeout.toString())
+					.onChange(async (value) => {
+						const parsedInt = parseInt(value);
+						if (Number.isNaN(parsedInt)) return;
+
+						this.plugin.settings.timeout = parseInt(value);
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
-			.setName('Startup reading mode')
-			.setDesc('View previously opened documents in reading mode when starting Obsidian.')
-			.addToggle(toggle => toggle
-				.onChange((value) => {
-					// this.plugin.settings.timeout = parseInt(value);
-					// await this.plugin.saveSettings();
-					console.log(value)
-				}));
+			.setName("Startup in reading mode")
+			.setDesc(
+				"View previously opened documents in reading mode when starting Obsidian.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.isReadingModeOnStartup)
+					.onChange(async (value) => {
+						this.plugin.settings.isReadingModeOnStartup = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 }
