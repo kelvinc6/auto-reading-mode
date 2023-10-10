@@ -9,27 +9,30 @@ import {
 interface AutoReadingModeSettings {
 	timeout: number;
 	isReadingModeOnStartup: boolean;
+	hasStartedOnce: boolean;
 }
 
 const DEFAULT_SETTINGS: AutoReadingModeSettings = {
 	timeout: 5,
 	isReadingModeOnStartup: true,
+	hasStartedOnce: false,
 };
 
 export default class AutoReadingMode extends Plugin {
 	settings: AutoReadingModeSettings;
-
 	timer: NodeJS.Timeout | null = null;
-	hasStarted: boolean = false;
-	fileOpenHandler: any;
 
 	async onload() {
 		await this.loadSettings();
 
 		this.app.workspace.onLayoutReady(() => {
-			if (this.settings.isReadingModeOnStartup) {
+			if (
+				this.settings.isReadingModeOnStartup &&
+				this.settings.hasStartedOnce
+			) {
 				this.setMarkdownLeavesToPreviewMode();
 			}
+			this.settings.hasStartedOnce = true;
 		});
 
 		this.app.workspace.on(
@@ -94,7 +97,7 @@ class AutoReadingModeSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Timeout (minutes)")
 			.setDesc(
-				"Timeout before reading mode is enabled while Obsidian is active or minimized.",
+				"Timeout before Reading mode is enabled while Obsidian is active or minimized.",
 			)
 			.addText((text) =>
 				text
@@ -111,7 +114,7 @@ class AutoReadingModeSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Startup in Reading mode")
 			.setDesc(
-				"View previously opened documents in reading mode when starting Obsidian.",
+				"View previously opened documents in Reading mode when starting Obsidian.",
 			)
 			.addToggle((toggle) =>
 				toggle
