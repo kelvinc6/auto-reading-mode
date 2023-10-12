@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: AutoReadingModeSettings = {
 
 export default class AutoReadingMode extends Plugin {
 	settings: AutoReadingModeSettings;
-	timer: NodeJS.Timeout | null = null;
+	timer: number = -1;
 
 	async onload() {
 		await this.loadSettings();
@@ -65,7 +65,7 @@ export default class AutoReadingMode extends Plugin {
 		console.log("Editor change callback");
 		if (this.timer != null) clearTimeout(this.timer);
 
-		this.timer = setTimeout(() => {
+		this.timer = window.setTimeout(() => {
 			this.setMarkdownLeavesToPreviewMode();
 		}, 60000 * this.settings.timeout);
 	}
