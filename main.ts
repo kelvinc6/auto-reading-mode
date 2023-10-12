@@ -35,9 +35,11 @@ export default class AutoReadingMode extends Plugin {
 			this.settings.hasStartedOnce = true;
 		});
 
-		this.app.workspace.on(
-			"editor-change",
-			this.onEditorChangeCallback.bind(this),
+		this.registerEvent(
+			this.app.workspace.on(
+				"editor-change",
+				this.onEditorChangeCallback.bind(this),
+			),
 		);
 
 		this.addSettingTab(new AutoReadingModeSettingTab(this.app, this));
