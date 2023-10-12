@@ -108,7 +108,7 @@ class AutoReadingModeSettingTab extends PluginSettingTab {
 						const parsedInt = parseInt(value);
 						if (Number.isNaN(parsedInt)) return;
 
-						this.plugin.settings.timeout = parseInt(value);
+						this.plugin.settings.timeout = parsedInt;
 						await this.plugin.saveSettings();
 					}),
 			);
