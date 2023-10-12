@@ -62,7 +62,6 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	onEditorChangeCallback() {
-		console.log("Editor change callback");
 		if (this.timer != null) clearTimeout(this.timer);
 
 		this.timer = window.setTimeout(() => {
@@ -71,7 +70,6 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	setMarkdownLeavesToPreviewMode() {
-		console.log("Setting leaves to preview.");
 		const markdownLeaves: WorkspaceLeaf[] =
 			this.app.workspace.getLeavesOfType("markdown");
 		markdownLeaves.forEach((workspaceLeaf) => {
