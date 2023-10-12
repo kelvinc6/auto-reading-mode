@@ -46,7 +46,7 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	onunload() {
-		if (this.timer != null) clearTimeout(this.timer);
+		clearTimeout(this.timer);
 	}
 
 	async loadSettings() {
@@ -62,7 +62,7 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	onEditorChangeCallback() {
-		if (this.timer != null) clearTimeout(this.timer);
+		clearTimeout(this.timer);
 
 		this.timer = window.setTimeout(() => {
 			this.setMarkdownLeavesToPreviewMode();
