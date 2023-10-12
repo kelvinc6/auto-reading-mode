@@ -1,7 +1,7 @@
 {
 	"id": "auto-reading-mode",
 	"name": "Auto Reading Mode",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Automatically switches previously opened Markdown pages into reading mode.",
 	"author": "Kelvin Cao",
