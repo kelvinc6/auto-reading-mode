@@ -9,30 +9,27 @@ import {
 interface AutoReadingModeSettings {
 	timeout: number;
 	isReadingModeOnStartup: boolean;
-	hasStartedOnce: boolean;
 }
 
 const DEFAULT_SETTINGS: AutoReadingModeSettings = {
 	timeout: 5,
 	isReadingModeOnStartup: true,
-	hasStartedOnce: false,
 };
 
 export default class AutoReadingMode extends Plugin {
 	settings: AutoReadingModeSettings;
 	timer: number = -1;
+	shouldSetFirstMarkdownLeafToPreview = false;
 
 	async onload() {
 		await this.loadSettings();
 
 		this.app.workspace.onLayoutReady(() => {
-			if (
-				this.settings.isReadingModeOnStartup &&
-				this.settings.hasStartedOnce
-			) {
-				this.setMarkdownLeavesToPreviewMode();
+			if (this.settings.isReadingModeOnStartup) {
+				if (this.setMarkdownLeavesToPreviewMode() == 0) {
+					this.shouldSetFirstMarkdownLeafToPreview = true;
+				}
 			}
-			this.settings.hasStartedOnce = true;
 		});
 
 		this.registerEvent(
@@ -40,6 +37,19 @@ export default class AutoReadingMode extends Plugin {
 				"editor-change",
 				this.onEditorChangeCallback.bind(this),
 			),
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", (leaf) => {
+				if (leaf == null) return;
+				if (
+					leaf.getViewState().type == "markdown" &&
+					this.shouldSetFirstMarkdownLeafToPreview
+				) {
+					this.setMarkdownLeavesToPreviewMode();
+					this.shouldSetFirstMarkdownLeafToPreview = false;
+				}
+			}),
 		);
 
 		this.addSettingTab(new AutoReadingModeSettingTab(this.app, this));
@@ -69,7 +79,11 @@ export default class AutoReadingMode extends Plugin {
 		}, 60000 * this.settings.timeout);
 	}
 
-	setMarkdownLeavesToPreviewMode() {
+	/**
+	 * Sets all active markdown leaves to preview mode.
+	 * @returns The number of markdown leaves present.
+	 */
+	setMarkdownLeavesToPreviewMode(): number {
 		const markdownLeaves: WorkspaceLeaf[] =
 			this.app.workspace.getLeavesOfType("markdown");
 		markdownLeaves.forEach((workspaceLeaf) => {
@@ -79,6 +93,7 @@ export default class AutoReadingMode extends Plugin {
 				state: { ...viewState.state, mode: "preview" },
 			});
 		});
+		return markdownLeaves.length;
 	}
 }
 
