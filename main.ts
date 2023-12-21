@@ -35,7 +35,7 @@ export default class AutoReadingMode extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on(
 				"editor-change",
-				this.onEditorChangeCallback.bind(this),
+				this.resetTimeout.bind(this),
 			),
 		);
 
@@ -49,6 +49,7 @@ export default class AutoReadingMode extends Plugin {
 					this.setMarkdownLeavesToPreviewMode();
 					this.shouldSetFirstMarkdownLeafToPreview = false;
 				}
+				this.resetTimeout();
 			}),
 		);
 
@@ -71,7 +72,7 @@ export default class AutoReadingMode extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	onEditorChangeCallback() {
+	resetTimeout() {
 		clearTimeout(this.timer);
 
 		this.timer = window.setTimeout(() => {

@@ -1,6 +1,6 @@
 {
 	"name": "auto-reading-mode",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Automatically switches previously opened Markdown pages into reading mode.",
 	"main": "main.js",
 	"scripts": {
