@@ -20,9 +20,13 @@ export default class AutoReadingMode extends Plugin {
 	settings: AutoReadingModeSettings;
 	timer: number = -1;
 	shouldSetFirstMarkdownLeafToPreview = false;
+	statusBarCountdown: HTMLElement | null;
+	remainingTime: number = 0
 
 	async onload() {
 		await this.loadSettings();
+
+		this.statusBarCountdown = this.addStatusBarItem();
 
 		this.app.workspace.onLayoutReady(() => {
 			if (this.settings.isReadingModeOnStartup) {
@@ -73,11 +77,21 @@ export default class AutoReadingMode extends Plugin {
 	}
 
 	resetTimeout() {
-		clearTimeout(this.timer);
 
-		this.timer = window.setTimeout(() => {
-			this.setMarkdownLeavesToPreviewMode();
-		}, 60000 * this.settings.timeout);
+		this.remainingTime = this.settings.timeout * 60
+		clearTimeout(this.timer);
+		
+		this.timer = window.setInterval(() => {
+			if (this.remainingTime <= 0 || this.isAllMarkdownLeavesPreview()) {
+				this.statusBarCountdown?.setText("")
+				this.setMarkdownLeavesToPreviewMode()
+				clearTimeout(this.timer)
+			}
+			else {
+				this.statusBarCountdown?.setText("Reading view in " + this.remainingTime + " seconds")
+				this.remainingTime--
+			}
+		}, 1000);
 	}
 
 	/**
@@ -95,6 +109,19 @@ export default class AutoReadingMode extends Plugin {
 			});
 		});
 		return markdownLeaves.length;
+	}
+
+	isAllMarkdownLeavesPreview(): boolean {
+		const markdownLeaves: WorkspaceLeaf[] =
+			this.app.workspace.getLeavesOfType("markdown");
+
+		for (const workspaceLeaf of markdownLeaves) {
+			const viewState = workspaceLeaf.getViewState();
+			console.log(viewState)
+
+			if (viewState.state?.mode != "preview") return false
+		}
+		return true
 	}
 }
 
